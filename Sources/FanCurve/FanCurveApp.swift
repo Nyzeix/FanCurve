@@ -16,7 +16,7 @@ struct FanCurveApp: App {
         }
 
         Window("FanCurve Help", id: "help") {
-            HelpView()
+            HelpView(viewModel: viewModel)
         }
         .defaultSize(width: 600, height: 600)
 

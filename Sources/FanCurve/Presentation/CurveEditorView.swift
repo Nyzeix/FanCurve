@@ -26,7 +26,7 @@ struct CurveEditorView: View {
             }
 
             Label(
-                "0 RPM is available from \(Int(FanCurveTemperatureLimits.minimum)) °C. Other targets must respect the hardware minimum.",
+                "0 RPM is available from \(temperatureFormatter.string(fromCelsius: FanCurveTemperatureLimits.minimum)). Other targets must respect the hardware minimum.",
                 systemImage: "thermometer.medium"
             )
                 .font(.caption)
@@ -49,7 +49,18 @@ struct CurveEditorView: View {
             }
             .chartXScale(domain: 35...105)
             .chartYScale(domain: 0...viewModel.fanLimits.maximumRPM)
-            .chartXAxisLabel("Temperature (°C)")
+            .chartXAxis {
+                AxisMarks(values: temperatureUnit.chartTickValues) { value in
+                    AxisGridLine()
+                    AxisTick()
+                    AxisValueLabel {
+                        if let celsius = value.as(Double.self) {
+                            Text(temperatureFormatter.string(fromCelsius: celsius, includesUnit: false))
+                        }
+                    }
+                }
+            }
+            .chartXAxisLabel("Temperature (\(temperatureUnit.symbol))")
             .chartYAxisLabel("Speed (RPM)")
             .frame(height: 230)
             .padding(.horizontal, 4)
@@ -58,13 +69,16 @@ struct CurveEditorView: View {
 
             ForEach($viewModel.curve.points) { $point in
                 HStack(spacing: 12) {
-                    Text("\(Int(point.temperature)) °C")
+                    Text(temperatureFormatter.string(fromCelsius: point.temperature))
                         .font(.body.monospacedDigit())
                         .frame(width: 70, alignment: .leading)
 
                     Slider(
-                        value: $point.temperature,
-                        in: FanCurveTemperatureLimits.minimum...FanCurveTemperatureLimits.maximum,
+                        value: Binding(
+                            get: { temperatureUnit.displayValue(fromCelsius: point.temperature) },
+                            set: { point.temperature = temperatureUnit.celsiusValue(fromDisplayed: $0) }
+                        ),
+                        in: temperatureUnit.displayedCurveRange,
                         step: 1
                     )
 
@@ -107,5 +121,13 @@ struct CurveEditorView: View {
         }
         .padding(18)
         .background(.background.secondary, in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    private var temperatureUnit: TemperatureUnit {
+        viewModel.menuBarPreferences.temperatureUnit
+    }
+
+    private var temperatureFormatter: TemperatureFormatter {
+        TemperatureFormatter(unit: temperatureUnit)
     }
 }

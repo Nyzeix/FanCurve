@@ -77,6 +77,29 @@ final class FanCurveTests: XCTestCase {
         }
     }
 
+    func testTemperatureUnitConvertsCelsiusToFahrenheit() {
+        XCTAssertEqual(TemperatureUnit.fahrenheit.displayValue(fromCelsius: 0), 32)
+        XCTAssertEqual(TemperatureUnit.fahrenheit.displayValue(fromCelsius: 100), 212)
+        XCTAssertEqual(TemperatureUnit.fahrenheit.celsiusValue(fromDisplayed: 95), 35)
+    }
+
+    func testTemperatureFormatterUsesSelectedUnit() {
+        let formatter = TemperatureFormatter(unit: .fahrenheit)
+
+        XCTAssertEqual(formatter.string(fromCelsius: 35), "95 °F")
+        XCTAssertEqual(formatter.string(fromCelsius: nil), "—")
+        XCTAssertEqual(formatter.string(fromCelsius: 35, includesUnit: false), "95")
+    }
+
+    func testMenuBarPreferencesKeepExistingValuesWhenUnitIsMissing() throws {
+        let data = #"{"updateInterval":5,"displayMode":"temperatureAndRPM"}"#.data(using: .utf8)!
+        let preferences = try JSONDecoder().decode(MenuBarPreferences.self, from: data)
+
+        XCTAssertEqual(preferences.updateInterval, .fiveSeconds)
+        XCTAssertEqual(preferences.displayMode, .temperatureAndRPM)
+        XCTAssertEqual(preferences.temperatureUnit, .celsius)
+    }
+
     func testAppleSMCReadOnlyProbe() async throws {
         guard ProcessInfo.processInfo.environment["FANCURVE_HARDWARE_TEST"] == "1" else {
             return

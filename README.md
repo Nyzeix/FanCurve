@@ -17,6 +17,7 @@ It displays CPU, GPU, and battery temperatures, reports current fan speed, and l
 - Automatic return to macOS fan management when custom control is disabled or a hardware error occurs.
 - Configurable menu bar refresh interval.
 - Menu bar display with either a temperature icon or temperature and total RPM.
+- Temperature display in Celsius or Fahrenheit.
 - Dock and `Command-Tab` presence while the main window is open.
 
 ## Compatibility
@@ -57,12 +58,13 @@ It then loads or restarts the helper with `launchd`.
 
 1. Open FanCurve from `/Applications` or from its menu bar item.
 2. Review the CPU, GPU, battery, and fan readings.
-3. Adjust the points in the **Fan curve** section. Temperatures must increase from left to right, and fan speed must stay level or increase.
-4. Select **Save** to validate and store the curve.
-5. Enable **Custom control** only after the readings and limits look coherent.
-6. Disable **Custom control** to return fan management to macOS.
+3. Select **Temperature unit** and choose Celsius or Fahrenheit. The selected unit is used throughout the dashboard, curve editor, and menu bar.
+4. Adjust the points in the **Fan curve** section. Temperatures must increase from left to right, and fan speed must stay level or increase.
+5. Select **Save** to validate and store the curve.
+6. Enable **Custom control** only after the readings and limits look coherent.
+7. Disable **Custom control** to return fan management to macOS.
 
-A `0 RPM` point is accepted from the application's minimum editable temperature of 35 °C. Any non-zero target must remain between the hardware minimum and maximum reported for the fan. macOS and the Mac firmware retain their own thermal protections and may override the requested behavior.
+A `0 RPM` point is accepted from the application's minimum editable temperature of 35 °C (95 °F). Any non-zero target must remain between the hardware minimum and maximum reported for the fan. macOS and the Mac firmware retain their own thermal protections and may override the requested behavior.
 
 ## Build from source
 

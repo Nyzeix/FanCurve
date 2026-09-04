@@ -33,7 +33,8 @@ struct MenuBarLabel: View {
     }
 
     private var labelText: String {
-        let temperature = displayedSnapshot.referenceTemperature.map { "\(Int($0.rounded())) °C" } ?? "—"
+        let formatter = TemperatureFormatter(unit: viewModel.menuBarPreferences.temperatureUnit)
+        let temperature = formatter.string(fromCelsius: displayedSnapshot.referenceTemperature)
         let totalFanRPM = displayedSnapshot.fans.map(\.currentRPM).reduce(0, +)
         return "\(temperature) · \(totalFanRPM) RPM"
     }
@@ -87,6 +88,18 @@ struct MenuBarView: View {
                 }
             }
 
+            Picker(
+                "Temperature unit",
+                selection: Binding(
+                    get: { viewModel.menuBarPreferences.temperatureUnit },
+                    set: { viewModel.setTemperatureUnit($0) }
+                )
+            ) {
+                ForEach(TemperatureUnit.allCases, id: \.self) { unit in
+                    Text(unit.displayName).tag(unit)
+                }
+            }
+
             Divider()
 
             Toggle(
@@ -132,7 +145,7 @@ struct MenuBarView: View {
     }
 
     private func temperatureText(_ temperature: Double?) -> String {
-        guard let temperature else { return "—" }
-        return "\(Int(temperature.rounded())) °C"
+        TemperatureFormatter(unit: viewModel.menuBarPreferences.temperatureUnit)
+            .string(fromCelsius: temperature)
     }
 }

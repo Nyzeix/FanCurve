@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct HelpView: View {
+    @ObservedObject var viewModel: FanControlViewModel
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
@@ -18,7 +20,7 @@ struct HelpView: View {
                 helpSection(
                     title: "Stop at 0 RPM",
                     systemImage: "pause.circle",
-                    text: "A target of 0 RPM can be selected in the curve from 35 °C. Non-zero speeds remain limited by the fan's reported hardware minimum."
+                    text: "A target of 0 RPM can be selected in the curve from \(temperatureFormatter.string(fromCelsius: FanCurveTemperatureLimits.minimum)). Non-zero speeds remain limited by the fan's reported hardware minimum."
                 )
                 helpSection(
                     title: "Return control to macOS",
@@ -50,6 +52,10 @@ struct HelpView: View {
             Text("Understand how FanCurve monitors and controls your fans.")
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private var temperatureFormatter: TemperatureFormatter {
+        TemperatureFormatter(unit: viewModel.menuBarPreferences.temperatureUnit)
     }
 
     private func helpSection(title: String, systemImage: String, text: String) -> some View {

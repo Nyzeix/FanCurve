@@ -54,6 +54,19 @@ struct DashboardView: View {
                 Label(viewModel.status.displayName, systemImage: statusIcon)
                     .font(.caption)
                     .foregroundStyle(statusColor)
+
+                Picker(
+                    "Temperature unit",
+                    selection: Binding(
+                        get: { viewModel.menuBarPreferences.temperatureUnit },
+                        set: { viewModel.setTemperatureUnit($0) }
+                    )
+                ) {
+                    ForEach(TemperatureUnit.allCases, id: \.self) { unit in
+                        Text(unit.displayName).tag(unit)
+                    }
+                }
+                .pickerStyle(.menu)
             }
         }
     }
@@ -141,7 +154,7 @@ struct DashboardView: View {
     }
 
     private func temperatureText(_ temperature: Double?) -> String {
-        guard let temperature else { return "—" }
-        return "\(Int(temperature.rounded())) °C"
+        TemperatureFormatter(unit: viewModel.menuBarPreferences.temperatureUnit)
+            .string(fromCelsius: temperature)
     }
 }

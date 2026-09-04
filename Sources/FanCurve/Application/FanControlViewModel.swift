@@ -89,6 +89,11 @@ final class FanControlViewModel: ObservableObject {
         saveMenuBarPreferences()
     }
 
+    func setTemperatureUnit(_ unit: TemperatureUnit) {
+        menuBarPreferences.temperatureUnit = unit
+        saveMenuBarPreferences()
+    }
+
     func installHelper() {
         do {
             try SMAppService.daemon(plistName: "com.paink.FanCurve.helper.plist").register()

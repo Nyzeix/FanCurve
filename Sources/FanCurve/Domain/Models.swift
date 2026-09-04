@@ -121,6 +121,37 @@ enum MenuBarDisplayMode: String, CaseIterable, Codable, Hashable, Sendable {
 struct MenuBarPreferences: Codable, Equatable, Sendable {
     var updateInterval: MenuBarUpdateInterval = .oneSecond
     var displayMode: MenuBarDisplayMode = .temperatureAndRPM
+    var temperatureUnit: TemperatureUnit = .celsius
+
+    private enum CodingKeys: String, CodingKey {
+        case updateInterval
+        case displayMode
+        case temperatureUnit
+    }
+
+    init(
+        updateInterval: MenuBarUpdateInterval = .oneSecond,
+        displayMode: MenuBarDisplayMode = .temperatureAndRPM,
+        temperatureUnit: TemperatureUnit = .celsius
+    ) {
+        self.updateInterval = updateInterval
+        self.displayMode = displayMode
+        self.temperatureUnit = temperatureUnit
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        updateInterval = try container.decodeIfPresent(MenuBarUpdateInterval.self, forKey: .updateInterval) ?? .oneSecond
+        displayMode = try container.decodeIfPresent(MenuBarDisplayMode.self, forKey: .displayMode) ?? .temperatureAndRPM
+        temperatureUnit = try container.decodeIfPresent(TemperatureUnit.self, forKey: .temperatureUnit) ?? .celsius
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(updateInterval, forKey: .updateInterval)
+        try container.encode(displayMode, forKey: .displayMode)
+        try container.encode(temperatureUnit, forKey: .temperatureUnit)
+    }
 }
 
 struct FanCurvePoint: Identifiable, Codable, Hashable, Sendable {
