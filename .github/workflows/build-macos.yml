@@ -1,0 +1,77 @@
+name: Build macOS package
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and package ARM64 application
+    runs-on: macos-15
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Show Swift version
+        run: swift --version
+
+      - name: Run tests
+        run: swift test
+
+      - name: Build application bundle
+        run: Scripts/build-app.sh
+
+      - name: Verify bundle
+        run: |
+          test -x dist/FanCurve.app/Contents/MacOS/FanCurve
+          test -x dist/FanCurve.app/Contents/Library/PrivilegedHelperTools/com.paink.FanCurve.helper
+          test -f dist/FanCurve.app/Contents/Library/LaunchDaemons/com.paink.FanCurve.helper.plist
+          plutil -lint dist/FanCurve.app/Contents/Info.plist
+          plutil -lint dist/FanCurve.app/Contents/Library/LaunchDaemons/com.paink.FanCurve.helper.plist
+          file dist/FanCurve.app/Contents/MacOS/FanCurve | grep -q arm64
+          file dist/FanCurve.app/Contents/Library/PrivilegedHelperTools/com.paink.FanCurve.helper | grep -q arm64
+          codesign --verify --deep --strict dist/FanCurve.app
+
+      - name: Create distribution archive
+        run: |
+          PACKAGE_ROOT="$RUNNER_TEMP/FanCurve"
+          mkdir -p "$PACKAGE_ROOT/Helper"
+          ditto --norsrc --noextattr dist/FanCurve.app "$PACKAGE_ROOT/FanCurve.app"
+          COPYFILE_DISABLE=1 cp dist/FanCurve.app/Contents/Library/PrivilegedHelperTools/com.paink.FanCurve.helper "$PACKAGE_ROOT/Helper/"
+          COPYFILE_DISABLE=1 cp dist/FanCurve.app/Contents/Library/LaunchDaemons/com.paink.FanCurve.helper.plist "$PACKAGE_ROOT/Helper/"
+          COPYFILE_DISABLE=1 cp Scripts/install-helper.sh "$PACKAGE_ROOT/install-helper.sh"
+          COPYFILE_DISABLE=1 cp README.md "$PACKAGE_ROOT/README.md"
+          chmod 755 "$PACKAGE_ROOT/install-helper.sh"
+          chmod 755 "$PACKAGE_ROOT/Helper/com.paink.FanCurve.helper"
+          ditto -c -k --norsrc --noextattr --keepParent "$PACKAGE_ROOT" FanCurve-macOS-arm64.zip
+          shasum -a 256 FanCurve-macOS-arm64.zip > FanCurve-macOS-arm64.zip.sha256
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: FanCurve-macOS-arm64
+          path: |
+            FanCurve-macOS-arm64.zip
+            FanCurve-macOS-arm64.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish tagged release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            FanCurve-macOS-arm64.zip \
+            FanCurve-macOS-arm64.zip.sha256 \
+            --title "FanCurve $GITHUB_REF_NAME" \
+            --generate-notes
