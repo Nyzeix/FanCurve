@@ -44,6 +44,8 @@ struct MenuBarView: View {
     @ObservedObject var viewModel: FanControlViewModel
     @Environment(\.openWindow) private var openWindow
 
+    private let menuBarPopoverWidth: CGFloat = 220
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("FanCurve")
@@ -56,48 +58,7 @@ struct MenuBarView: View {
             metricRow("Battery", value: temperatureText(viewModel.snapshot.batteryTemperature), icon: "battery.75")
 
             ForEach(viewModel.snapshot.fans) { fan in
-                metricRow(fan.name, value: "\(fan.currentRPM) RPM", icon: "wind")
-            }
-
-            Divider()
-
-            Text("Status bar")
-                .font(.headline)
-
-            Picker(
-                "Refresh",
-                selection: Binding(
-                    get: { viewModel.menuBarPreferences.updateInterval },
-                    set: { viewModel.setMenuBarUpdateInterval($0) }
-                )
-            ) {
-                ForEach(MenuBarUpdateInterval.allCases, id: \.self) { interval in
-                    Text(interval.displayName).tag(interval)
-                }
-            }
-
-            Picker(
-                "Display",
-                selection: Binding(
-                    get: { viewModel.menuBarPreferences.displayMode },
-                    set: { viewModel.setMenuBarDisplayMode($0) }
-                )
-            ) {
-                ForEach(MenuBarDisplayMode.allCases, id: \.self) { mode in
-                    Text(mode.displayName).tag(mode)
-                }
-            }
-
-            Picker(
-                "Temperature unit",
-                selection: Binding(
-                    get: { viewModel.menuBarPreferences.temperatureUnit },
-                    set: { viewModel.setTemperatureUnit($0) }
-                )
-            ) {
-                ForEach(TemperatureUnit.allCases, id: \.self) { unit in
-                    Text(unit.displayName).tag(unit)
-                }
+                metricRow(fanMenuTitle(for: fan), value: "\(fan.currentRPM) RPM", icon: "wind")
             }
 
             Divider()
@@ -121,16 +82,12 @@ struct MenuBarView: View {
                 openWindow(id: "dashboard")
             }
 
-            Button("FanCurve Help", systemImage: "questionmark.circle") {
-                openWindow(id: "help")
-            }
-
             Button("Quit", systemImage: "power") {
                 NSApplication.shared.terminate(nil)
             }
         }
         .padding(14)
-        .frame(width: 280)
+        .frame(width: menuBarPopoverWidth)
     }
 
     private func metricRow(_ title: String, value: String, icon: String) -> some View {
@@ -142,6 +99,10 @@ struct MenuBarView: View {
                 .monospacedDigit()
         }
         .font(.callout)
+    }
+
+    private func fanMenuTitle(for fan: FanSnapshot) -> String {
+        fan.name == "Left fan" ? "Fan speed" : fan.name
     }
 
     private func temperatureText(_ temperature: Double?) -> String {

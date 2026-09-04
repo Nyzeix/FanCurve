@@ -30,7 +30,7 @@ struct HelpView: View {
                 helpSection(
                     title: "Status bar",
                     systemImage: "menubar.arrow.up.rectangle",
-                    text: "The FanCurve menu lets you choose the label refresh rate and display either the temperature icon or the temperature together with the total fan speed."
+                    text: "Open Settings from the macOS menu bar, or from the FanCurve menu, to choose the refresh rate, status bar display, and temperature unit."
                 )
 
                 Label(

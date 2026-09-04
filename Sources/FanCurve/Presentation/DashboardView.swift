@@ -55,18 +55,6 @@ struct DashboardView: View {
                     .font(.caption)
                     .foregroundStyle(statusColor)
 
-                Picker(
-                    "Temperature unit",
-                    selection: Binding(
-                        get: { viewModel.menuBarPreferences.temperatureUnit },
-                        set: { viewModel.setTemperatureUnit($0) }
-                    )
-                ) {
-                    ForEach(TemperatureUnit.allCases, id: \.self) { unit in
-                        Text(unit.displayName).tag(unit)
-                    }
-                }
-                .pickerStyle(.menu)
             }
         }
     }

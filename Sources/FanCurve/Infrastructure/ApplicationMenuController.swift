@@ -43,7 +43,7 @@ final class ApplicationMenuController: NSObject, NSApplicationDelegate {
             forInfoDictionaryKey: "CFBundleName"
         ) as? String ?? ProcessInfo.processInfo.processName
 
-        let allowedMenuTitles = Set([applicationMenuTitle, "Help"])
+        let allowedMenuTitles = Set([applicationMenuTitle, "Settings", "Help"])
         mainMenu.items
             .filter { !allowedMenuTitles.contains($0.title) }
             .forEach(mainMenu.removeItem)

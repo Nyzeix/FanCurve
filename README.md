@@ -18,6 +18,7 @@ It displays CPU, GPU, and battery temperatures, reports current fan speed, and l
 - Configurable menu bar refresh interval.
 - Menu bar display with either a temperature icon or temperature and total RPM.
 - Temperature display in Celsius or Fahrenheit.
+- A dedicated Settings window for menu bar and temperature preferences.
 - Dock and `Command-Tab` presence while the main window is open.
 
 ## Compatibility
@@ -58,7 +59,7 @@ It then loads or restarts the helper with `launchd`.
 
 1. Open FanCurve from `/Applications` or from its menu bar item.
 2. Review the CPU, GPU, battery, and fan readings.
-3. Select **Temperature unit** and choose Celsius or Fahrenheit. The selected unit is used throughout the dashboard, curve editor, and menu bar.
+3. Open **Settings** from the macOS menu bar or the FanCurve menu to configure the menu bar refresh rate, display mode, and temperature unit.
 4. Adjust the points in the **Fan curve** section. Temperatures must increase from left to right, and fan speed must stay level or increase.
 5. Select **Save** to validate and store the curve.
 6. Enable **Custom control** only after the readings and limits look coherent.
@@ -111,8 +112,8 @@ The `Build macOS package` GitHub Actions workflow:
 To publish a release:
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
 ## Project structure

@@ -20,6 +20,11 @@ struct FanCurveApp: App {
         }
         .defaultSize(width: 600, height: 600)
 
+        Window("FanCurve Settings", id: "settings") {
+            SettingsView(viewModel: viewModel)
+        }
+        .defaultSize(width: 480, height: 280)
+
         MenuBarExtra {
             MenuBarView(viewModel: viewModel)
         } label: {
@@ -37,6 +42,13 @@ private struct FanCurveCommands: Commands {
             Button("How FanCurve works") {
                 openWindow(id: "help")
             }
+        }
+
+        CommandMenu("Settings") {
+            Button("Open Settings") {
+                openWindow(id: "settings")
+            }
+            .keyboardShortcut(",", modifiers: [.command])
         }
     }
 }
