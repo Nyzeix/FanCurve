@@ -4,6 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+(cd "$PROJECT_DIR" && swift build -c release)
 BIN_DIR="$(cd "$PROJECT_DIR" && swift build -c release --show-bin-path)"
 APP_PATH="$PROJECT_DIR/dist/FanCurve.app"
 STAGING_DIR="$(mktemp -d "${TMPDIR:-/tmp}/FanCurve-build.XXXXXX")"
