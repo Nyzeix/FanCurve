@@ -19,6 +19,7 @@ It displays CPU, GPU, and battery temperatures, reports current fan speed, and l
 - Menu bar display with either a temperature icon or temperature and total RPM.
 - Temperature display in Celsius or Fahrenheit.
 - A dedicated Settings window for menu bar and temperature preferences.
+- A simple monochrome liquid-glass application icon.
 - Dock and `Command-Tab` presence while the main window is open.
 
 ## Compatibility
@@ -112,8 +113,8 @@ The `Build macOS package` GitHub Actions workflow:
 To publish a release:
 
 ```bash
-git tag v0.1.1
-git push origin v0.1.1
+git tag v0.1.2
+git push origin v0.1.2
 ```
 
 ## Project structure

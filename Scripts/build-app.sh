@@ -25,6 +25,8 @@ COPYFILE_DISABLE=1 cp "$BIN_DIR/FanCurve" "$STAGED_APP_PATH/Contents/MacOS/FanCu
 COPYFILE_DISABLE=1 cp "$BIN_DIR/FanCurveHelper" \
     "$STAGED_APP_PATH/Contents/Library/PrivilegedHelperTools/com.paink.FanCurve.helper"
 COPYFILE_DISABLE=1 cp "$PROJECT_DIR/Resources/Info.plist" "$STAGED_APP_PATH/Contents/Info.plist"
+COPYFILE_DISABLE=1 cp "$PROJECT_DIR/Resources/AppIcon.icns" \
+    "$STAGED_APP_PATH/Contents/Resources/AppIcon.icns"
 COPYFILE_DISABLE=1 cp "$PROJECT_DIR/Resources/com.paink.FanCurve.helper.plist" \
     "$STAGED_APP_PATH/Contents/Library/LaunchDaemons/com.paink.FanCurve.helper.plist"
 
