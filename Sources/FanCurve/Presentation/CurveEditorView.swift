@@ -26,7 +26,7 @@ struct CurveEditorView: View {
             }
 
             Label(
-                "0 RPM is available from \(temperatureFormatter.string(fromCelsius: FanCurveTemperatureLimits.minimum)). Other targets must respect the hardware minimum.",
+                "0 RPM is available from \(temperatureFormatter.string(fromCelsius: FanCurveTemperatureLimits.minimum)). Non-zero targets must be at least \(FanCurveRPMPolicy.minimumNonZeroRPM) RPM and respect the hardware maximum.",
                 systemImage: "thermometer.medium"
             )
                 .font(.caption)
@@ -88,11 +88,11 @@ struct CurveEditorView: View {
 
                     Slider(
                         value: Binding(
-                            get: { Double(point.targetRPM) },
-                            set: { point.targetRPM = Int($0.rounded()) }
+                            get: { rpmSliderPosition(for: point.targetRPM) },
+                            set: { point.targetRPM = targetRPM(for: $0) }
                         ),
-                        in: 0...Double(viewModel.fanLimits.maximumRPM),
-                        step: 50
+                        in: 0...rpmSliderMaximum,
+                        step: 1
                     )
                 }
             }
@@ -129,5 +129,33 @@ struct CurveEditorView: View {
 
     private var temperatureFormatter: TemperatureFormatter {
         TemperatureFormatter(unit: temperatureUnit)
+    }
+
+    private var rpmSliderMaximum: Double {
+        let minimum = FanCurveRPMPolicy.minimumNonZeroRPM(for: viewModel.fanLimits)
+        let maximum = viewModel.fanLimits.maximumRPM
+        guard maximum >= minimum else { return 0 }
+
+        let nonZeroSteps = (maximum - minimum + 49) / 50
+        return Double(nonZeroSteps + 1)
+    }
+
+    private func rpmSliderPosition(for rpm: Int) -> Double {
+        guard rpm > 0 else { return 0 }
+
+        let minimum = FanCurveRPMPolicy.minimumNonZeroRPM(for: viewModel.fanLimits)
+        let steps = max(0, Int(Double(rpm - minimum).rounded() / 50))
+        return min(Double(steps + 1), rpmSliderMaximum)
+    }
+
+    private func targetRPM(for sliderPosition: Double) -> Int {
+        guard sliderPosition >= 0.5 else { return 0 }
+
+        let minimum = FanCurveRPMPolicy.minimumNonZeroRPM(for: viewModel.fanLimits)
+        let maximum = viewModel.fanLimits.maximumRPM
+        guard maximum >= minimum else { return 0 }
+
+        let steps = max(0, Int(sliderPosition.rounded()) - 1)
+        return min(minimum + steps * 50, maximum)
     }
 }

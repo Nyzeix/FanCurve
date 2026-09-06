@@ -20,7 +20,7 @@ struct HelpView: View {
                 helpSection(
                     title: "Stop at 0 RPM",
                     systemImage: "pause.circle",
-                    text: "A target of 0 RPM can be selected in the curve from \(temperatureFormatter.string(fromCelsius: FanCurveTemperatureLimits.minimum)). Non-zero speeds remain limited by the fan's reported hardware minimum."
+                    text: "A target of 0 RPM can be selected in the curve from \(temperatureFormatter.string(fromCelsius: FanCurveTemperatureLimits.minimum)). Non-zero speeds must start at 2,350 RPM and remain within the fan's reported maximum."
                 )
                 helpSection(
                     title: "Return control to macOS",

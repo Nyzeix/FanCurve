@@ -76,7 +76,10 @@ actor SimulatedHardwareService: HardwareService {
         guard targetRPMByFan[fanID] != nil else {
             throw HardwareServiceError.unavailable("Unknown fan.")
         }
-        guard rpm == 0 || limits.minimumRPM...limits.maximumRPM ~= rpm else {
+        guard FanCurveRPMPolicy.isValid(rpm, for: limits) else {
+            if FanCurveRPMPolicy.isInForbiddenRange(rpm) {
+                throw HardwareServiceError.invalidCommand("Fan speed must be 0 RPM or at least 2,350 RPM.")
+            }
             throw HardwareServiceError.invalidCommand("Requested fan speed is out of range.")
         }
 

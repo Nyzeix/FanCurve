@@ -66,7 +66,7 @@ It then loads or restarts the helper with `launchd`.
 6. Enable **Custom control** only after the readings and limits look coherent.
 7. Disable **Custom control** to return fan management to macOS.
 
-A `0 RPM` point is accepted from the application's minimum editable temperature of 35 °C (95 °F). Any non-zero target must remain between the hardware minimum and maximum reported for the fan. macOS and the Mac firmware retain their own thermal protections and may override the requested behavior.
+A `0 RPM` point is accepted from the application's minimum editable temperature of 35 °C (95 °F). Every non-zero target must be at least `2,350 RPM` and remain below the maximum reported for the fan; values between `1 RPM` and `2,349 RPM` are not accepted. When a curve goes from `0 RPM` to a non-zero target, FanCurve keeps the fan at `0 RPM` until the next point, then applies the non-zero target. macOS and the Mac firmware retain their own thermal protections and may override the requested behavior.
 
 ## Build from source
 

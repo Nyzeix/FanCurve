@@ -13,22 +13,22 @@ final class FanCurveTests: XCTestCase {
     func testCalculatorInterpolatesBetweenTwoPoints() {
         let curve = FanCurve(
             points: [
-                FanCurvePoint(temperature: 40, targetRPM: 1_000),
-                FanCurvePoint(temperature: 80, targetRPM: 5_000)
+                FanCurvePoint(temperature: 40, targetRPM: 2_350),
+                FanCurvePoint(temperature: 80, targetRPM: 5_050)
             ],
             source: .cpu
         )
         let calculator = FanCurveCalculator()
         let limits = FanLimits(minimumRPM: 1_000, maximumRPM: 6_000)
 
-        XCTAssertEqual(calculator.targetRPM(for: 60, curve: curve, limits: limits), 3_000)
+        XCTAssertEqual(calculator.targetRPM(for: 60, curve: curve, limits: limits), 3_700)
     }
 
     func testValidatorRejectsDecreasingSpeed() {
         let curve = FanCurve(
             points: [
-                FanCurvePoint(temperature: 40, targetRPM: 3_000),
-                FanCurvePoint(temperature: 80, targetRPM: 2_000)
+                FanCurvePoint(temperature: 40, targetRPM: 4_000),
+                FanCurvePoint(temperature: 80, targetRPM: 3_000)
             ],
             source: .hottestProcessor
         )
@@ -42,7 +42,7 @@ final class FanCurveTests: XCTestCase {
     func testCalculatorClampsOutsideCurve() {
         let curve = FanCurve(
             points: [
-                FanCurvePoint(temperature: 50, targetRPM: 1_500),
+                FanCurvePoint(temperature: 50, targetRPM: 2_350),
                 FanCurvePoint(temperature: 90, targetRPM: 5_000)
             ],
             source: .gpu
@@ -50,7 +50,7 @@ final class FanCurveTests: XCTestCase {
         let calculator = FanCurveCalculator()
         let limits = FanLimits(minimumRPM: 1_000, maximumRPM: 6_000)
 
-        XCTAssertEqual(calculator.targetRPM(for: 20, curve: curve, limits: limits), 1_500)
+        XCTAssertEqual(calculator.targetRPM(for: 20, curve: curve, limits: limits), 2_350)
         XCTAssertEqual(calculator.targetRPM(for: 100, curve: curve, limits: limits), 5_000)
     }
 
@@ -58,7 +58,7 @@ final class FanCurveTests: XCTestCase {
         let curve = FanCurve(
             points: [
                 FanCurvePoint(temperature: FanCurveTemperatureLimits.minimum, targetRPM: 0),
-                FanCurvePoint(temperature: 60, targetRPM: 2_000)
+                FanCurvePoint(temperature: 60, targetRPM: 2_350)
             ],
             source: .cpu
         )
@@ -72,7 +72,7 @@ final class FanCurveTests: XCTestCase {
         let curve = FanCurve(
             points: [
                 FanCurvePoint(temperature: FanCurveTemperatureLimits.minimum - 1, targetRPM: 0),
-                FanCurvePoint(temperature: 60, targetRPM: 2_000)
+                FanCurvePoint(temperature: 60, targetRPM: 2_350)
             ],
             source: .cpu
         )
@@ -82,6 +82,49 @@ final class FanCurveTests: XCTestCase {
         ) { error in
             XCTAssertEqual(error as? FanCurveValidationError, .temperatureOutOfBounds)
         }
+    }
+
+    func testForbiddenRPMRangeIsRejected() {
+        let curve = FanCurve(
+            points: [
+                FanCurvePoint(temperature: 49, targetRPM: 0),
+                FanCurvePoint(temperature: 50, targetRPM: 2_349)
+            ],
+            source: .cpu
+        )
+
+        XCTAssertThrowsError(
+            try FanCurveValidator().validate(curve, limits: FanLimits(minimumRPM: 1_000, maximumRPM: 6_550))
+        ) { error in
+            XCTAssertEqual(error as? FanCurveValidationError, .speedInForbiddenRange)
+        }
+    }
+
+    func testMinimumAllowedNonZeroRPMIsAccepted() throws {
+        let curve = FanCurve(
+            points: [
+                FanCurvePoint(temperature: 49, targetRPM: 0),
+                FanCurvePoint(temperature: 50, targetRPM: FanCurveRPMPolicy.minimumNonZeroRPM)
+            ],
+            source: .cpu
+        )
+
+        XCTAssertNoThrow(try FanCurveValidator().validate(curve, limits: FanLimits(minimumRPM: 1_000, maximumRPM: 6_550)))
+    }
+
+    func testCalculatorKeepsZeroRPMOutOfForbiddenRange() {
+        let curve = FanCurve(
+            points: [
+                FanCurvePoint(temperature: 49, targetRPM: 0),
+                FanCurvePoint(temperature: 50, targetRPM: FanCurveRPMPolicy.minimumNonZeroRPM)
+            ],
+            source: .cpu
+        )
+        let calculator = FanCurveCalculator()
+        let limits = FanLimits(minimumRPM: 1_000, maximumRPM: 6_550)
+
+        XCTAssertEqual(calculator.targetRPM(for: 49.5, curve: curve, limits: limits), 0)
+        XCTAssertEqual(calculator.targetRPM(for: 50, curve: curve, limits: limits), 2_350)
     }
 
     func testTemperatureUnitConvertsCelsiusToFahrenheit() {

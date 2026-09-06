@@ -5,6 +5,7 @@ enum FanCurveValidationError: LocalizedError, Equatable, Sendable {
     case temperatureOutOfBounds
     case temperaturesNotIncreasing
     case speedOutOfBounds
+    case speedInForbiddenRange
     case speedDecreases
     case invalidNumber
 
@@ -14,6 +15,7 @@ enum FanCurveValidationError: LocalizedError, Equatable, Sendable {
         case .temperatureOutOfBounds: "Temperature must be between 35 °C and 105 °C."
         case .temperaturesNotIncreasing: "Temperatures must be strictly increasing."
         case .speedOutOfBounds: "A fan speed is outside the fan limits."
+        case .speedInForbiddenRange: "Fan speed must be 0 RPM or at least 2,350 RPM."
         case .speedDecreases: "Fan speed cannot decrease as temperature increases."
         case .invalidNumber: "The curve contains an invalid value."
         }
@@ -33,10 +35,10 @@ struct FanCurveValidator: Sendable {
                 throw FanCurveValidationError.temperatureOutOfBounds
             }
 
-            let isZeroRPM = point.targetRPM == 0
-            let isWithinHardwareRange = point.targetRPM >= limits.minimumRPM
-                && point.targetRPM <= limits.maximumRPM
-            guard isZeroRPM || isWithinHardwareRange else {
+            guard !FanCurveRPMPolicy.isInForbiddenRange(point.targetRPM) else {
+                throw FanCurveValidationError.speedInForbiddenRange
+            }
+            guard FanCurveRPMPolicy.isValid(point.targetRPM, for: limits) else {
                 throw FanCurveValidationError.speedOutOfBounds
             }
         }
@@ -58,10 +60,10 @@ struct FanCurveCalculator: Sendable {
         guard let last = curve.points.last else { return limits.minimumRPM }
 
         if temperature <= first.temperature {
-            return first.targetRPM.clampedForFan(limits: limits)
+            return FanCurveRPMPolicy.clamped(first.targetRPM, for: limits)
         }
         if temperature >= last.temperature {
-            return last.targetRPM.clampedForFan(limits: limits)
+            return FanCurveRPMPolicy.clamped(last.targetRPM, for: limits)
         }
 
         for pair in zip(curve.points, curve.points.dropFirst()) {
@@ -69,23 +71,20 @@ struct FanCurveCalculator: Sendable {
             let upper = pair.1
             guard temperature <= upper.temperature else { continue }
 
+            if temperature == upper.temperature {
+                return FanCurveRPMPolicy.clamped(upper.targetRPM, for: limits)
+            }
+
+            if lower.targetRPM == 0 {
+                return 0
+            }
+
             let temperatureRange = upper.temperature - lower.temperature
             let progress = (temperature - lower.temperature) / temperatureRange
             let speed = Double(lower.targetRPM) + progress * Double(upper.targetRPM - lower.targetRPM)
-            return Int(speed.rounded()).clampedForFan(limits: limits)
+            return FanCurveRPMPolicy.clamped(Int(speed.rounded()), for: limits)
         }
 
-        return last.targetRPM.clampedForFan(limits: limits)
-    }
-}
-
-private extension Int {
-    func clampedForFan(limits: FanLimits) -> Int {
-        if self <= 0 { return 0 }
-        return clamped(to: limits.minimumRPM...limits.maximumRPM)
-    }
-
-    func clamped(to range: ClosedRange<Int>) -> Int {
-        Swift.min(Swift.max(self, range.lowerBound), range.upperBound)
+        return FanCurveRPMPolicy.clamped(last.targetRPM, for: limits)
     }
 }

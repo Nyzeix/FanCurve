@@ -173,8 +173,7 @@ struct FanCurve: Codable, Equatable, Sendable {
     static func recommended(limits: FanLimits) -> FanCurve {
         let temperatures = [49.0, 50.0, 75.0, 90.0]
         let recommendedRPMs = [0, 2_350, 5_068, 6_550].map { rpm in
-            guard rpm > 0 else { return 0 }
-            return min(max(rpm, limits.minimumRPM), limits.maximumRPM)
+            FanCurveRPMPolicy.clamped(rpm, for: limits)
         }
 
         return FanCurve(
