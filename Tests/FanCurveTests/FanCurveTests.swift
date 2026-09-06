@@ -3,6 +3,13 @@ import FanCurveSMC
 @testable import FanCurve
 
 final class FanCurveTests: XCTestCase {
+    func testRecommendedCurveMatchesCapturedProfile() {
+        let curve = FanCurve.recommended(limits: FanLimits(minimumRPM: 1_000, maximumRPM: 6_550))
+
+        XCTAssertEqual(curve.points.map(\.temperature), [49, 50, 75, 90])
+        XCTAssertEqual(curve.points.map(\.targetRPM), [0, 2_350, 5_068, 6_550])
+    }
+
     func testCalculatorInterpolatesBetweenTwoPoints() {
         let curve = FanCurve(
             points: [

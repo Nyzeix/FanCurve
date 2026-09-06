@@ -3,7 +3,7 @@ import Foundation
 actor SimulatedHardwareService: HardwareService {
     private let leftFan = FanIdentifier(rawValue: "left")
     private let rightFan = FanIdentifier(rawValue: "right")
-    private let limits = FanLimits(minimumRPM: 1_000, maximumRPM: 6_000)
+    private let limits = FanLimits(minimumRPM: 1_000, maximumRPM: 6_550)
     private var targetRPMByFan: [FanIdentifier: Int]
     private var isCustomControlEnabled = false
 

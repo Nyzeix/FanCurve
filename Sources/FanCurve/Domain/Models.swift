@@ -171,17 +171,16 @@ struct FanCurve: Codable, Equatable, Sendable {
     var source: CurveTemperatureSource
 
     static func recommended(limits: FanLimits) -> FanCurve {
-        let minimum = limits.minimumRPM
-        let maximum = limits.maximumRPM
-        let range = maximum - minimum
+        let temperatures = [49.0, 50.0, 75.0, 90.0]
+        let recommendedRPMs = [0, 2_350, 5_068, 6_550].map { rpm in
+            guard rpm > 0 else { return 0 }
+            return min(max(rpm, limits.minimumRPM), limits.maximumRPM)
+        }
 
         return FanCurve(
-            points: [
-                FanCurvePoint(temperature: 45, targetRPM: minimum),
-                FanCurvePoint(temperature: 60, targetRPM: minimum + Int(Double(range) * 0.35)),
-                FanCurvePoint(temperature: 75, targetRPM: minimum + Int(Double(range) * 0.65)),
-                FanCurvePoint(temperature: 90, targetRPM: maximum)
-            ],
+            points: zip(temperatures, recommendedRPMs).map { temperature, rpm in
+                FanCurvePoint(temperature: temperature, targetRPM: rpm)
+            },
             source: .hottestProcessor
         )
     }

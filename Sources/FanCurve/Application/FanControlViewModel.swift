@@ -26,7 +26,7 @@ final class FanControlViewModel: ObservableObject {
 
     init(hardwareService: any HardwareService = HardwareServiceFactory.makeDefault()) {
         self.hardwareService = hardwareService
-        let defaultCurve = FanCurve.recommended(limits: FanLimits(minimumRPM: 1_000, maximumRPM: 6_000))
+        let defaultCurve = FanCurve.recommended(limits: FanLimits(minimumRPM: 1_000, maximumRPM: 6_550))
         let storedCurve = Self.loadCurve() ?? defaultCurve
         curve = storedCurve
         menuBarPreferences = Self.loadMenuBarPreferences()
@@ -38,7 +38,7 @@ final class FanControlViewModel: ObservableObject {
     }
 
     var fanLimits: FanLimits {
-        snapshot.fans.first?.limits ?? FanLimits(minimumRPM: 1_000, maximumRPM: 6_000)
+        snapshot.fans.first?.limits ?? FanLimits(minimumRPM: 1_000, maximumRPM: 6_550)
     }
 
     var maximumTemperature: Double? {
