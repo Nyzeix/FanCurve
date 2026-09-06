@@ -19,6 +19,7 @@ It displays CPU, GPU, and battery temperatures, reports current fan speed, and l
 - Menu bar display with either a temperature icon or temperature and total RPM.
 - Temperature display in Celsius or Fahrenheit.
 - A dedicated Settings window for menu bar and temperature preferences.
+- Automatic checks for stable GitHub releases, with explicit user-confirmed updates.
 - A simple monochrome liquid-glass application icon.
 - Dock and `Command-Tab` presence while the main window is open.
 
@@ -47,6 +48,8 @@ Other Apple Silicon models may work, but they have not been validated. Fan contr
 6. Quit and reopen FanCurve.
 7. Confirm that the application reports `AppleSMC control available through the privileged helper.` before enabling **Custom control**.
 
+Once FanCurve is running, open **Settings > Updates** to see the installed version, check for a new stable release manually, or enable/disable the daily automatic check. FanCurve never downloads or installs an update without confirmation. Before replacing the application, it returns fan control to macOS and leaves custom control disabled after relaunch.
+
 The installation script copies only these two system files:
 
 ```text
@@ -65,6 +68,7 @@ It then loads or restarts the helper with `launchd`.
 5. Select **Save** to validate and store the curve.
 6. Enable **Custom control** only after the readings and limits look coherent.
 7. Disable **Custom control** to return fan management to macOS.
+8. Open **Settings > Updates** to check the installed version and manage update checks.
 
 A `0 RPM` point is accepted from the application's minimum editable temperature of 35 °C (95 °F). Every non-zero target must be at least `2,350 RPM` and remain below the maximum reported for the fan; values between `1 RPM` and `2,349 RPM` are not accepted. When a curve goes from `0 RPM` to a non-zero target, FanCurve keeps the fan at `0 RPM` until the next point, then applies the non-zero target. macOS and the Mac firmware retain their own thermal protections and may override the requested behavior.
 
@@ -113,8 +117,8 @@ The `Build macOS package` GitHub Actions workflow:
 To publish a release:
 
 ```bash
-git tag v0.1.2
-git push origin v0.1.2
+git tag v0.1.4
+git push origin v0.1.4
 ```
 
 ## Project structure
@@ -132,6 +136,7 @@ Tests/                   Domain and hardware read-only tests
 ## Security notes
 
 - The helper validates fan identifiers and RPM limits again before writing to AppleSMC.
+- Updates are fetched only from the official GitHub repository and the archive digest, bundle identifier, signature, architecture, and macOS compatibility are checked before installation.
 - Automated tests do not send real fan commands.
 - Hardware write behavior must be validated manually for every supported Mac and macOS version.
 - The application is not distributed through the Mac App Store.

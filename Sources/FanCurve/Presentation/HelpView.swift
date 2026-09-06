@@ -32,6 +32,11 @@ struct HelpView: View {
                     systemImage: "menubar.arrow.up.rectangle",
                     text: "Open Settings from the macOS menu bar, or from the FanCurve menu, to choose the refresh rate, status bar display, and temperature unit."
                 )
+                helpSection(
+                    title: "Updates",
+                    systemImage: "arrow.down.circle",
+                    text: "FanCurve checks the official GitHub release periodically. A new version is never installed without your confirmation. Before updating, FanCurve returns fan control to macOS and keeps Custom control disabled after relaunch."
+                )
 
                 Label(
                     "The privileged helper is required to write hardware commands. The Mac's thermal protections remain the priority.",

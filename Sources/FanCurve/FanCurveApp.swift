@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct FanCurveApp: App {
     @StateObject private var viewModel = FanControlViewModel()
+    @StateObject private var updateCoordinator = UpdateCoordinator()
     @NSApplicationDelegateAdaptor(ApplicationMenuController.self)
     private var applicationMenuController
 
@@ -21,12 +22,12 @@ struct FanCurveApp: App {
         .defaultSize(width: 600, height: 600)
 
         Window("FanCurve Settings", id: "settings") {
-            SettingsView(viewModel: viewModel)
+            SettingsView(viewModel: viewModel, updateCoordinator: updateCoordinator)
         }
         .defaultSize(width: 480, height: 280)
 
         MenuBarExtra {
-            MenuBarView(viewModel: viewModel)
+            MenuBarView(viewModel: viewModel, updateCoordinator: updateCoordinator)
         } label: {
             MenuBarLabel(viewModel: viewModel)
         }

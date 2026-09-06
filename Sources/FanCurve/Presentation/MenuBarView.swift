@@ -42,6 +42,7 @@ struct MenuBarLabel: View {
 
 struct MenuBarView: View {
     @ObservedObject var viewModel: FanControlViewModel
+    @ObservedObject var updateCoordinator: UpdateCoordinator
     @Environment(\.openWindow) private var openWindow
 
     private let menuBarPopoverWidth: CGFloat = 220
@@ -62,6 +63,18 @@ struct MenuBarView: View {
             }
 
             Divider()
+
+            if let release = updateCoordinator.availableRelease {
+                Button {
+                    openWindow(id: "settings")
+                } label: {
+                    Label {
+                        Text(verbatim: "FanCurve \(release.version) is available")
+                    } icon: {
+                        Image(systemName: "arrow.down.circle")
+                    }
+                }
+            }
 
             Toggle(
                 "Custom control",

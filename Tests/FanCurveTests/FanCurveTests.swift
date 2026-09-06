@@ -3,6 +3,15 @@ import FanCurveSMC
 @testable import FanCurve
 
 final class FanCurveTests: XCTestCase {
+    func testAppVersionParsesGitTagsAndComparesSemantically() {
+        let older = AppVersion(rawValue: "v0.1.9")
+        let newer = AppVersion(rawValue: "0.1.10")
+
+        XCTAssertEqual(older?.description, "0.1.9")
+        XCTAssertTrue(older! < newer!)
+        XCTAssertNil(AppVersion(rawValue: "0.1"))
+    }
+
     func testRecommendedCurveMatchesCapturedProfile() {
         let curve = FanCurve.recommended(limits: FanLimits(minimumRPM: 1_000, maximumRPM: 6_550))
 

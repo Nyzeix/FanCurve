@@ -42,6 +42,9 @@ codesign --verify --deep --strict "$STAGED_APP_PATH"
 mkdir -p "$PROJECT_DIR/dist"
 rm -rf "$APP_PATH"
 ditto --norsrc --noextattr "$STAGED_APP_PATH" "$APP_PATH"
+xattr -cr "$APP_PATH"
+xattr -d com.apple.FinderInfo "$APP_PATH" 2>/dev/null || true
+codesign --force --deep --sign - "$APP_PATH"
 codesign --verify --deep --strict "$APP_PATH"
 
 echo "Application built: $APP_PATH"

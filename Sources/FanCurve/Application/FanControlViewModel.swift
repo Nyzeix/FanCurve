@@ -71,6 +71,20 @@ final class FanControlViewModel: ObservableObject {
         }
     }
 
+    func prepareForApplicationUpdate() async -> Bool {
+        isControlEnabled = false
+        status = snapshot.isSimulated ? .demo : .monitoring
+
+        do {
+            try await hardwareService.restoreAutomaticControl()
+            return true
+        } catch {
+            errorMessage = "Fan control could not be returned to macOS. The update was cancelled."
+            status = .error(error.localizedDescription)
+            return false
+        }
+    }
+
     func setControlEnabled(_ enabled: Bool) {
         if enabled {
             enableControl()
