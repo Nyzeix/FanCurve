@@ -18,10 +18,10 @@ else
     exit 1
 fi
 
-HELPER_PATH="$APP_PATH/Contents/Library/PrivilegedHelperTools/com.paink.FanCurve.helper"
-PLIST_PATH="$APP_PATH/Contents/Library/LaunchDaemons/com.paink.FanCurve.helper.plist"
-INSTALLED_HELPER="/Library/PrivilegedHelperTools/com.paink.FanCurve.helper"
-INSTALLED_PLIST="/Library/LaunchDaemons/com.paink.FanCurve.helper.plist"
+HELPER_PATH="$APP_PATH/Contents/Library/PrivilegedHelperTools/FanCurve.helper"
+PLIST_PATH="$APP_PATH/Contents/Library/LaunchDaemons/FanCurve.helper.plist"
+INSTALLED_HELPER="/Library/PrivilegedHelperTools/FanCurve.helper"
+INSTALLED_PLIST="/Library/LaunchDaemons/FanCurve.helper.plist"
 
 if [[ ! -x "$HELPER_PATH" || ! -f "$PLIST_PATH" ]]; then
     echo "The FanCurve helper files are missing from $APP_PATH." >&2
@@ -32,8 +32,8 @@ sudo install -d -m 755 /Library/PrivilegedHelperTools /Library/LaunchDaemons
 sudo install -m 755 "$HELPER_PATH" "$INSTALLED_HELPER"
 sudo install -m 644 "$PLIST_PATH" "$INSTALLED_PLIST"
 
-if sudo launchctl print system/com.paink.FanCurve.helper >/dev/null 2>&1; then
-    sudo launchctl kickstart -k system/com.paink.FanCurve.helper
+if sudo launchctl print system/FanCurve.helper >/dev/null 2>&1; then
+    sudo launchctl kickstart -k system/FanCurve.helper
 else
     sudo launchctl bootstrap system "$INSTALLED_PLIST"
 fi

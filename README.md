@@ -53,8 +53,8 @@ Once FanCurve is running, open **Settings > Updates** to see the installed versi
 The installation script copies only these two system files:
 
 ```text
-/Library/PrivilegedHelperTools/com.paink.FanCurve.helper
-/Library/LaunchDaemons/com.paink.FanCurve.helper.plist
+/Library/PrivilegedHelperTools/FanCurve.helper
+/Library/LaunchDaemons/FanCurve.helper.plist
 ```
 
 It then loads or restarts the helper with `launchd`.

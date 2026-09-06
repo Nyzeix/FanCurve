@@ -110,7 +110,7 @@ final class FanControlViewModel: ObservableObject {
 
     func installHelper() {
         do {
-            try SMAppService.daemon(plistName: "com.paink.FanCurve.helper.plist").register()
+            try SMAppService.daemon(plistName: "FanCurve.helper.plist").register()
             errorMessage = nil
             Task { await refreshCapabilities() }
         } catch {

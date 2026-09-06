@@ -3,15 +3,15 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>com.paink.FanCurve.helper</string>
+	<string>FanCurve.helper</string>
 	<key>MachServices</key>
 	<dict>
-		<key>com.paink.FanCurve.helper</key>
+		<key>FanCurve.helper</key>
 		<true/>
 	</dict>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/Library/PrivilegedHelperTools/com.paink.FanCurve.helper</string>
+		<string>/Library/PrivilegedHelperTools/FanCurve.helper</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>

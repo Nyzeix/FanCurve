@@ -23,18 +23,18 @@ mkdir -p \
 
 COPYFILE_DISABLE=1 cp "$BIN_DIR/FanCurve" "$STAGED_APP_PATH/Contents/MacOS/FanCurve"
 COPYFILE_DISABLE=1 cp "$BIN_DIR/FanCurveHelper" \
-    "$STAGED_APP_PATH/Contents/Library/PrivilegedHelperTools/com.paink.FanCurve.helper"
+    "$STAGED_APP_PATH/Contents/Library/PrivilegedHelperTools/FanCurve.helper"
 COPYFILE_DISABLE=1 cp "$PROJECT_DIR/Resources/Info.plist" "$STAGED_APP_PATH/Contents/Info.plist"
 COPYFILE_DISABLE=1 cp "$PROJECT_DIR/Resources/AppIcon.icns" \
     "$STAGED_APP_PATH/Contents/Resources/AppIcon.icns"
-COPYFILE_DISABLE=1 cp "$PROJECT_DIR/Resources/com.paink.FanCurve.helper.plist" \
-    "$STAGED_APP_PATH/Contents/Library/LaunchDaemons/com.paink.FanCurve.helper.plist"
+COPYFILE_DISABLE=1 cp "$PROJECT_DIR/Resources/FanCurve.helper.plist" \
+    "$STAGED_APP_PATH/Contents/Library/LaunchDaemons/FanCurve.helper.plist"
 
 chmod 755 "$STAGED_APP_PATH/Contents/MacOS/FanCurve"
-chmod 755 "$STAGED_APP_PATH/Contents/Library/PrivilegedHelperTools/com.paink.FanCurve.helper"
+chmod 755 "$STAGED_APP_PATH/Contents/Library/PrivilegedHelperTools/FanCurve.helper"
 
 codesign --force --sign - \
-    "$STAGED_APP_PATH/Contents/Library/PrivilegedHelperTools/com.paink.FanCurve.helper"
+    "$STAGED_APP_PATH/Contents/Library/PrivilegedHelperTools/FanCurve.helper"
 codesign --force --sign - "$STAGED_APP_PATH/Contents/MacOS/FanCurve"
 codesign --force --deep --sign - "$STAGED_APP_PATH"
 codesign --verify --deep --strict "$STAGED_APP_PATH"

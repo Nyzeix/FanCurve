@@ -106,17 +106,17 @@ actor LocalApplicationUpdateInstaller: UpdateInstaller {
 
     private func validate(_ applicationURL: URL, for release: AvailableRelease) throws {
         guard let bundle = Bundle(url: applicationURL),
-              bundle.bundleIdentifier == "com.paink.FanCurve",
+              bundle.bundleIdentifier == "FanCurve",
               let versionString = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
               AppVersion(rawValue: versionString) == release.version,
               fileManager.isExecutableFile(atPath: applicationURL.appendingPathComponent("Contents/MacOS/FanCurve").path),
-              fileManager.isExecutableFile(atPath: applicationURL.appendingPathComponent("Contents/Library/PrivilegedHelperTools/com.paink.FanCurve.helper").path) else {
+              fileManager.isExecutableFile(atPath: applicationURL.appendingPathComponent("Contents/Library/PrivilegedHelperTools/FanCurve.helper").path) else {
             throw UpdateError.incompatibleApplication
         }
 
         guard isCompatibleWithCurrentSystem(bundle: bundle),
               containsArm64Executable(at: applicationURL.appendingPathComponent("Contents/MacOS/FanCurve")),
-              containsArm64Executable(at: applicationURL.appendingPathComponent("Contents/Library/PrivilegedHelperTools/com.paink.FanCurve.helper")) else {
+              containsArm64Executable(at: applicationURL.appendingPathComponent("Contents/Library/PrivilegedHelperTools/FanCurve.helper")) else {
             throw UpdateError.incompatibleSystem
         }
 

@@ -2,7 +2,7 @@ import FanCurveSMC
 import FanCurveXPC
 import Foundation
 
-private let machServiceName = "com.paink.FanCurve.helper"
+private let machServiceName = "FanCurve.helper"
 
 final class HelperService: NSObject, FanCurveHelperProtocol {
     private let device: SMCDevice?

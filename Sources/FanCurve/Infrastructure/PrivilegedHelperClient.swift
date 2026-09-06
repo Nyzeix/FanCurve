@@ -1,7 +1,7 @@
 import FanCurveXPC
 import Foundation
 
-private let fanCurveHelperMachService = "com.paink.FanCurve.helper"
+private let fanCurveHelperMachService = "FanCurve.helper"
 
 final class PrivilegedHelperClient: @unchecked Sendable {
     private let connection: NSXPCConnection
