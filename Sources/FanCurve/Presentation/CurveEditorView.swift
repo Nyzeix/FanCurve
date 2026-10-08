@@ -1,4 +1,3 @@
-import Charts
 import SwiftUI
 
 struct CurveEditorView: View {
@@ -35,38 +34,11 @@ struct CurveEditorView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            Chart(viewModel.curve.points) { point in
-                LineMark(
-                    x: .value("Temperature", point.temperature),
-                    y: .value("Speed", point.targetRPM)
-                )
-                .foregroundStyle(.blue.gradient)
-                .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
-
-                PointMark(
-                    x: .value("Temperature", point.temperature),
-                    y: .value("Speed", point.targetRPM)
-                )
-                .foregroundStyle(.blue)
-                .symbolSize(75)
-            }
-            .chartXScale(domain: 35...105)
-            .chartYScale(domain: 0...viewModel.fanLimits.maximumRPM)
-            .chartXAxis {
-                AxisMarks(values: temperatureUnit.chartTickValues) { value in
-                    AxisGridLine()
-                    AxisTick()
-                    AxisValueLabel {
-                        if let celsius = value.as(Double.self) {
-                            Text(temperatureFormatter.string(fromCelsius: celsius, includesUnit: false))
-                        }
-                    }
-                }
-            }
-            .chartXAxisLabel("Temperature (\(temperatureUnit.symbol))")
-            .chartYAxisLabel("Speed (RPM)")
-            .frame(height: 230)
-            .padding(.horizontal, 4)
+            FanCurveChartView(
+                points: viewModel.curve.points,
+                maximumRPM: viewModel.fanLimits.maximumRPM,
+                temperatureUnit: temperatureUnit
+            )
 
             Divider()
 
@@ -79,10 +51,11 @@ struct CurveEditorView: View {
                     Slider(
                         value: Binding(
                             get: { temperatureUnit.displayValue(fromCelsius: point.temperature) },
-                            set: { point.temperature = temperatureUnit.celsiusValue(fromDisplayed: $0) }
-                        ),
-                        in: temperatureUnit.displayedCurveRange,
-                        step: 1
+                            set: {
+                                point.temperature = temperatureUnit.celsiusValue(fromDisplayed: $0.rounded())
+                            }
+                    ),
+                        in: temperatureUnit.displayedCurveRange
                     )
 
                     Text("\(point.targetRPM) RPM")
@@ -94,8 +67,7 @@ struct CurveEditorView: View {
                             get: { rpmSliderPosition(for: point.targetRPM) },
                             set: { point.targetRPM = targetRPM(for: $0) }
                         ),
-                        in: 0...rpmSliderMaximum,
-                        step: 1
+                        in: 0...rpmSliderMaximum
                     )
                 }
             }
