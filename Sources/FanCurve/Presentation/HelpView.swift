@@ -18,6 +18,11 @@ struct HelpView: View {
                     text: "Each point associates a temperature with a target speed. FanCurve interpolates values between points and applies the curve only when the Custom control switch is enabled."
                 )
                 helpSection(
+                    title: "Profiles",
+                    systemImage: "square.stack.3d.up",
+                    text: "Quiet, Normal, and Aggressive Cooling are available by default. Each profile stores its own curve, and you can create, rename, delete, and customize profiles from the curve editor."
+                )
+                helpSection(
                     title: "Stop at 0 RPM",
                     systemImage: "pause.circle",
                     text: "A target of 0 RPM can be selected in the curve from \(temperatureFormatter.string(fromCelsius: FanCurveTemperatureLimits.minimum)). Non-zero speeds must start at 2,350 RPM and remain within the fan's reported maximum."

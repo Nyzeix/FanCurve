@@ -19,6 +19,43 @@ final class FanCurveTests: XCTestCase {
         XCTAssertEqual(curve.points.map(\.targetRPM), [0, 2_350, 5_068, 6_550])
     }
 
+    func testDefaultProfilesHaveExpectedNamesAndCurves() {
+        let profiles = FanProfile.defaults(limits: FanLimits(minimumRPM: 1_000, maximumRPM: 6_550))
+
+        XCTAssertEqual(profiles.map(\.name), ["Quiet", "Normal", "Aggressive Cooling"])
+        XCTAssertEqual(profiles[0].curve.points.map(\.temperature), [45, 60, 80, 95])
+        XCTAssertEqual(profiles[1].curve.points.map(\.temperature), [49, 50, 75, 90])
+        XCTAssertEqual(profiles[2].curve.points.map(\.temperature), [35, 42, 60, 75])
+    }
+
+    func testProfileStoreMigratesLegacyCurveToNormalProfile() throws {
+        let suiteName = "FanCurveTests.profileStore.\(UUID().uuidString)"
+        let userDefaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { userDefaults.removePersistentDomain(forName: suiteName) }
+
+        let legacyCurve = FanCurve(
+            points: [
+                FanCurvePoint(temperature: 50, targetRPM: 0),
+                FanCurvePoint(temperature: 70, targetRPM: 2_350)
+            ],
+            source: .cpu
+        )
+        let store = FanProfileStore(userDefaults: userDefaults)
+        let storage = store.load(
+            defaultProfiles: FanProfile.defaults(limits: FanLimits(minimumRPM: 1_000, maximumRPM: 6_550)),
+            legacyCurve: legacyCurve
+        )
+
+        let normalProfile = try XCTUnwrap(storage.profiles.first { $0.name == "Normal" })
+        XCTAssertEqual(normalProfile.curve, legacyCurve)
+        XCTAssertEqual(storage.activeProfileID, normalProfile.id)
+
+        store.save(profiles: storage.profiles, activeProfileID: storage.activeProfileID)
+        let reloaded = store.load(defaultProfiles: [], legacyCurve: nil)
+        XCTAssertEqual(reloaded.profiles, storage.profiles)
+        XCTAssertEqual(reloaded.activeProfileID, storage.activeProfileID)
+    }
+
     func testCalculatorInterpolatesBetweenTwoPoints() {
         let curve = FanCurve(
             points: [

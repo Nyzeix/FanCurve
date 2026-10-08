@@ -183,6 +183,67 @@ struct FanCurve: Codable, Equatable, Sendable {
             source: .hottestProcessor
         )
     }
+
+    static func quiet(limits: FanLimits) -> FanCurve {
+        makeProfileCurve(
+            temperatures: [45, 60, 80, 95],
+            rpms: [0, 2_350, 5_068, 6_550],
+            limits: limits
+        )
+    }
+
+    static func aggressiveCooling(limits: FanLimits) -> FanCurve {
+        makeProfileCurve(
+            temperatures: [35, 42, 60, 75],
+            rpms: [0, 2_350, 5_068, 6_550],
+            limits: limits
+        )
+    }
+
+    private static func makeProfileCurve(
+        temperatures: [Double],
+        rpms: [Int],
+        limits: FanLimits
+    ) -> FanCurve {
+        FanCurve(
+            points: zip(temperatures, rpms).map { temperature, rpm in
+                FanCurvePoint(
+                    temperature: temperature,
+                    targetRPM: FanCurveRPMPolicy.clamped(rpm, for: limits)
+                )
+            },
+            source: .hottestProcessor
+        )
+    }
+}
+
+struct FanProfile: Identifiable, Codable, Equatable, Sendable {
+    let id: UUID
+    var name: String
+    var curve: FanCurve
+
+    init(id: UUID = UUID(), name: String, curve: FanCurve) {
+        self.id = id
+        self.name = name
+        self.curve = curve
+    }
+
+    static func defaults(limits: FanLimits) -> [FanProfile] {
+        [
+            FanProfile(
+                name: "Quiet",
+                curve: .quiet(limits: limits)
+            ),
+            FanProfile(
+                name: "Normal",
+                curve: .recommended(limits: limits)
+            ),
+            FanProfile(
+                name: "Aggressive Cooling",
+                curve: .aggressiveCooling(limits: limits)
+            )
+        ]
+    }
 }
 
 enum ControlStatus: Equatable, Sendable {

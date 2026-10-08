@@ -7,6 +7,8 @@ import SwiftUI
 final class FanControlViewModel: ObservableObject {
     @Published private(set) var snapshot = SystemSnapshot.empty
     @Published var curve: FanCurve
+    @Published private(set) var profiles: [FanProfile]
+    @Published private(set) var activeProfileID: UUID
     @Published var menuBarPreferences: MenuBarPreferences
     @Published private(set) var status: ControlStatus = .demo
     @Published private(set) var isControlEnabled = false
@@ -19,6 +21,7 @@ final class FanControlViewModel: ObservableObject {
     @Published private(set) var errorMessage: String?
 
     private let hardwareService: any HardwareService
+    private let profileStore = FanProfileStore()
     private let curveValidator = FanCurveValidator()
     private let curveCalculator = FanCurveCalculator()
     private var monitoringTask: Task<Void, Never>?
@@ -26,11 +29,21 @@ final class FanControlViewModel: ObservableObject {
 
     init(hardwareService: any HardwareService = HardwareServiceFactory.makeDefault()) {
         self.hardwareService = hardwareService
-        let defaultCurve = FanCurve.recommended(limits: FanLimits(minimumRPM: 1_000, maximumRPM: 6_550))
-        let storedCurve = Self.loadCurve() ?? defaultCurve
-        curve = storedCurve
+        let defaultLimits = FanLimits(minimumRPM: 1_000, maximumRPM: 6_550)
+        let defaultProfiles = FanProfile.defaults(limits: defaultLimits)
+        let storage = profileStore.load(
+            defaultProfiles: defaultProfiles,
+            legacyCurve: Self.loadCurve()
+        )
+        let activeProfile = storage.profiles.first { $0.id == storage.activeProfileID }
+            ?? storage.profiles[0]
+
+        profiles = storage.profiles
+        activeProfileID = activeProfile.id
+        curve = activeProfile.curve
         menuBarPreferences = Self.loadMenuBarPreferences()
-        savedCurve = storedCurve
+        savedCurve = activeProfile.curve
+        profileStore.save(profiles: profiles, activeProfileID: activeProfileID)
     }
 
     deinit {
@@ -47,6 +60,10 @@ final class FanControlViewModel: ObservableObject {
 
     var totalFanRPM: Int {
         snapshot.fans.map(\.currentRPM).reduce(0, +)
+    }
+
+    var activeProfileName: String {
+        profiles.first { $0.id == activeProfileID }?.name ?? "Profile"
     }
 
     func start() {
@@ -108,6 +125,63 @@ final class FanControlViewModel: ObservableObject {
         saveMenuBarPreferences()
     }
 
+    func selectProfile(_ profileID: UUID) {
+        guard let profile = profiles.first(where: { $0.id == profileID }) else { return }
+
+        activeProfileID = profile.id
+        curve = profile.curve
+        savedCurve = profile.curve
+        profileStore.save(profiles: profiles, activeProfileID: activeProfileID)
+        errorMessage = nil
+
+        if isControlEnabled {
+            Task { await applyCurrentCurve() }
+        }
+    }
+
+    func createProfile(named name: String) {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return }
+
+        let profile = FanProfile(name: trimmedName, curve: curve)
+        profiles.append(profile)
+        activeProfileID = profile.id
+        savedCurve = profile.curve
+        profileStore.save(profiles: profiles, activeProfileID: activeProfileID)
+        errorMessage = nil
+    }
+
+    func renameActiveProfile(to name: String) {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty,
+              let index = profiles.firstIndex(where: { $0.id == activeProfileID }) else {
+            return
+        }
+
+        profiles[index].name = trimmedName
+        profileStore.save(profiles: profiles, activeProfileID: activeProfileID)
+    }
+
+    func deleteActiveProfile() {
+        guard profiles.count > 1,
+              let index = profiles.firstIndex(where: { $0.id == activeProfileID }) else {
+            return
+        }
+
+        profiles.remove(at: index)
+        let replacementIndex = min(index, profiles.count - 1)
+        let replacement = profiles[replacementIndex]
+        activeProfileID = replacement.id
+        curve = replacement.curve
+        savedCurve = replacement.curve
+        profileStore.save(profiles: profiles, activeProfileID: activeProfileID)
+        errorMessage = nil
+
+        if isControlEnabled {
+            Task { await applyCurrentCurve() }
+        }
+    }
+
     func installHelper() {
         do {
             try SMAppService.daemon(plistName: "FanCurve.helper.plist").register()
@@ -121,6 +195,10 @@ final class FanControlViewModel: ObservableObject {
     func saveCurve() {
         do {
             try curveValidator.validate(curve, limits: fanLimits)
+            if let index = profiles.firstIndex(where: { $0.id == activeProfileID }) {
+                profiles[index].curve = curve
+            }
+            profileStore.save(profiles: profiles, activeProfileID: activeProfileID)
             Self.saveCurve(curve)
             savedCurve = curve
             errorMessage = nil

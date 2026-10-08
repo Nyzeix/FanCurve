@@ -8,7 +8,7 @@ struct FanCurveApp: App {
     private var applicationMenuController
 
     var body: some Scene {
-        WindowGroup(id: "dashboard") {
+        Window("FanCurve", id: "dashboard") {
             DashboardView(viewModel: viewModel)
         }
         .defaultSize(width: 860, height: 700)

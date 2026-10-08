@@ -12,6 +12,7 @@ It displays CPU, GPU, and battery temperatures, reports current fan speed, and l
 - CPU, GPU, and battery temperature monitoring.
 - Current fan speed reporting.
 - Editable temperature-to-RPM curve.
+- Customizable fan profiles with Quiet, Normal, and Aggressive Cooling presets.
 - A special `0 RPM` target for the lower part of the curve.
 - One switch to enable or disable custom control.
 - Automatic return to macOS fan management when custom control is disabled or a hardware error occurs.
@@ -64,11 +65,12 @@ It then loads or restarts the helper with `launchd`.
 1. Open FanCurve from `/Applications` or from its menu bar item.
 2. Review the CPU, GPU, battery, and fan readings.
 3. Open **Settings** from the macOS menu bar or the FanCurve menu to configure the menu bar refresh rate, display mode, and temperature unit.
-4. Adjust the points in the **Fan curve** section. Temperatures must increase from left to right, and fan speed must stay level or increase.
-5. Select **Save** to validate and store the curve.
-6. Enable **Custom control** only after the readings and limits look coherent.
-7. Disable **Custom control** to return fan management to macOS.
-8. Open **Settings > Updates** to check the installed version and manage update checks.
+4. Select a profile in the **Fan curve** section. The default profiles are **Quiet**, **Normal**, and **Aggressive Cooling**.
+5. Adjust the points in the selected profile. Temperatures must increase from left to right, and fan speed must stay level or increase.
+6. Select **Save** to validate and store the curve in that profile. Use the profile menu to create, rename, or delete profiles.
+7. Enable **Custom control** only after the readings and limits look coherent.
+8. Disable **Custom control** to return fan management to macOS.
+9. Open **Settings > Updates** to check the installed version and manage update checks.
 
 A `0 RPM` point is accepted from the application's minimum editable temperature of 35 °C (95 °F). Every non-zero target must be at least `2,350 RPM` and remain below the maximum reported for the fan; values between `1 RPM` and `2,349 RPM` are not accepted. When a curve goes from `0 RPM` to a non-zero target, FanCurve keeps the fan at `0 RPM` until the next point, then applies the non-zero target. macOS and the Mac firmware retain their own thermal protections and may override the requested behavior.
 

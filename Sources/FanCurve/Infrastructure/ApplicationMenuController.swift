@@ -2,20 +2,10 @@ import AppKit
 
 @MainActor
 final class ApplicationMenuController: NSObject, NSApplicationDelegate {
-    private var menuObserver: NSObjectProtocol?
+    private var menuCleanupWorkItem: DispatchWorkItem?
 
     override init() {
         super.init()
-
-        menuObserver = NotificationCenter.default.addObserver(
-            forName: NSMenu.didAddItemNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.removeUnusedMenusWhenReady()
-            }
-        }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -27,13 +17,14 @@ final class ApplicationMenuController: NSObject, NSApplicationDelegate {
     }
 
     private func removeUnusedMenusWhenReady() {
-        DispatchQueue.main.async { [weak self] in
-            self?.removeUnusedMenus()
-        }
+        menuCleanupWorkItem?.cancel()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+        let workItem = DispatchWorkItem { [weak self] in
             self?.removeUnusedMenus()
         }
+        menuCleanupWorkItem = workItem
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: workItem)
     }
 
     private func removeUnusedMenus() {

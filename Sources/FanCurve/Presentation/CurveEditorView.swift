@@ -3,6 +3,7 @@ import SwiftUI
 
 struct CurveEditorView: View {
     @ObservedObject var viewModel: FanControlViewModel
+    @State private var profileEditor: ProfileEditorMode?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -16,6 +17,8 @@ struct CurveEditorView: View {
                 }
 
                 Spacer()
+
+                profilePicker
 
                 Picker("Source", selection: $viewModel.curve.source) {
                     ForEach(CurveTemperatureSource.allCases, id: \.self) { source in
@@ -121,6 +124,56 @@ struct CurveEditorView: View {
         }
         .padding(18)
         .background(.background.secondary, in: RoundedRectangle(cornerRadius: 14))
+        .sheet(item: $profileEditor) { editor in
+            ProfileEditorView(
+                title: editor.title,
+                actionTitle: editor.actionTitle,
+                initialName: editor.initialName
+            ) { name in
+                switch editor {
+                case .create:
+                    viewModel.createProfile(named: name)
+                case .rename:
+                    viewModel.renameActiveProfile(to: name)
+                }
+            }
+        }
+    }
+
+    private var profilePicker: some View {
+        HStack(spacing: 6) {
+            Picker("Profile", selection: Binding(
+                get: { viewModel.activeProfileID },
+                set: { viewModel.selectProfile($0) }
+            )) {
+                ForEach(viewModel.profiles) { profile in
+                    Text(profile.name).tag(profile.id)
+                }
+            }
+            .frame(width: 170)
+
+            Menu {
+                Button("New Profile", systemImage: "plus") {
+                    profileEditor = .create
+                }
+
+                Button("Rename Profile", systemImage: "pencil") {
+                    profileEditor = .rename(viewModel.activeProfileName)
+                }
+
+                Divider()
+
+                Button("Delete Profile", systemImage: "trash", role: .destructive) {
+                    viewModel.deleteActiveProfile()
+                }
+                .disabled(viewModel.profiles.count <= 1)
+            } label: {
+                Image(systemName: "ellipsis.circle")
+                    .imageScale(.large)
+            }
+            .menuStyle(.borderlessButton)
+            .help("Manage profiles")
+        }
     }
 
     private var temperatureUnit: TemperatureUnit {
@@ -157,5 +210,38 @@ struct CurveEditorView: View {
 
         let steps = max(0, Int(sliderPosition.rounded()) - 1)
         return min(minimum + steps * 50, maximum)
+    }
+}
+
+private enum ProfileEditorMode: Identifiable {
+    case create
+    case rename(String)
+
+    var id: String {
+        switch self {
+        case .create: "create"
+        case .rename: "rename"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .create: "New Profile"
+        case .rename: "Rename Profile"
+        }
+    }
+
+    var actionTitle: String {
+        switch self {
+        case .create: "Create"
+        case .rename: "Save"
+        }
+    }
+
+    var initialName: String {
+        switch self {
+        case .create: ""
+        case .rename(let name): name
+        }
     }
 }
