@@ -20,11 +20,16 @@ struct DashboardView: View {
             .frame(maxWidth: .infinity)
         }
         .frame(minWidth: 720, minHeight: 600)
+        .background {
+            WindowVisibilityObserver { viewModel.setDashboardVisible($0) }
+                .frame(width: 0, height: 0)
+        }
         .onAppear {
             viewModel.start()
             ApplicationActivationController.shared.dashboardDidAppear()
         }
         .onDisappear {
+            viewModel.setDashboardVisible(false)
             ApplicationActivationController.shared.dashboardDidDisappear()
         }
     }

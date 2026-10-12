@@ -39,6 +39,7 @@ struct CurveEditorView: View {
                 maximumRPM: viewModel.fanLimits.maximumRPM,
                 temperatureUnit: temperatureUnit
             )
+            .equatable()
 
             Divider()
 

@@ -109,6 +109,8 @@ private struct SMCValue: Sendable {
 
 private final class SMCConnection: @unchecked Sendable {
     private let connection: io_connect_t
+    // Access is serialized by the owning hardware actor or the helper's lock.
+    private var keyInfoCache: [String: (info: SMCKeyInfo, dataType: String)] = [:]
 
     init() throws {
         var iterator: io_iterator_t = 0
@@ -140,6 +142,10 @@ private final class SMCConnection: @unchecked Sendable {
         IOServiceClose(connection)
     }
 
+    func invalidateCachedMetadata() {
+        keyInfoCache.removeAll()
+    }
+
     func read(_ key: String) throws -> SMCValue {
         let keyInfo = try readKeyInfo(for: key)
         var request = SMCParameter()
@@ -149,6 +155,7 @@ private final class SMCConnection: @unchecked Sendable {
 
         let response = try call(request)
         guard response.result == 0 else {
+            keyInfoCache.removeValue(forKey: key)
             throw SMCDeviceError.firmwareRejected("Reading key \(key) was rejected.")
         }
 
@@ -172,11 +179,15 @@ private final class SMCConnection: @unchecked Sendable {
 
         let response = try call(request)
         guard response.result == 0 else {
+            keyInfoCache.removeValue(forKey: key)
             throw SMCDeviceError.firmwareRejected("The firmware rejected writing \(key).")
         }
     }
 
     private func readKeyInfo(for key: String) throws -> (info: SMCKeyInfo, dataType: String) {
+        if let cached = keyInfoCache[key] {
+            return cached
+        }
         var request = SMCParameter()
         request.key = try fourCharacterCode(from: key)
         request.data8 = SMCCommand.readKeyInfo.rawValue
@@ -189,7 +200,9 @@ private final class SMCConnection: @unchecked Sendable {
             (String(bytes: buffer, encoding: .ascii) ?? "????")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
         }
-        return (response.keyInfo, dataType)
+        let metadata = (info: response.keyInfo, dataType: dataType)
+        keyInfoCache[key] = metadata
+        return metadata
     }
 
     private func call(_ request: SMCParameter) throws -> SMCParameter {
@@ -211,6 +224,7 @@ private final class SMCConnection: @unchecked Sendable {
             &outputSize
         )
         guard result == kIOReturnSuccess else {
+            invalidateCachedMetadata()
             throw SMCDeviceError.unavailable("IOKit returned code 0x\(String(result, radix: 16)).")
         }
         return output
@@ -243,15 +257,21 @@ private final class SMCConnection: @unchecked Sendable {
 
 public final class SMCDevice: @unchecked Sendable {
     private let connection: SMCConnection
+    private var temperatureKeys: [String: String] = [:]
 
     public init() throws {
         connection = try SMCConnection()
     }
 
-    public func readFans() throws -> [SMCFanReading] {
+    public func invalidateCachedMetadata() {
+        connection.invalidateCachedMetadata()
+        temperatureKeys.removeAll()
+    }
+
+    public func readFans(includeTargetRPM: Bool = true) throws -> [SMCFanReading] {
         let count = readInteger(key: "FNum") ?? 0
         let indexes = count > 0 ? Array(0..<min(count, 8)) : Array(0..<4)
-        let fans = indexes.compactMap(readFan(index:))
+        let fans = indexes.compactMap { readFan(index: $0, includeTargetRPM: includeTargetRPM) }
         guard !fans.isEmpty else {
             throw SMCDeviceError.unavailable("No compatible fans were detected.")
         }
@@ -260,15 +280,15 @@ public final class SMCDevice: @unchecked Sendable {
 
     public func readTemperatures() -> SMCTemperatureReadings {
         SMCTemperatureReadings(
-            cpu: readTemperature(keys: [
+            cpu: readTemperature(sensor: "cpu", keys: [
                 "Tp00", "Tp04", "Tp08", "Tp0C", "Tp0G", "Tp0K",
                 "Tp0O", "Tp0R", "Tp0U", "Tp0X", "Tp0a", "Tp0d",
                 "Tp0g", "Tp0j", "Tp0m", "Tp0p", "Tp0u", "Tp0y", "TC0P"
             ]),
-            gpu: readTemperature(keys: [
+            gpu: readTemperature(sensor: "gpu", keys: [
                 "Tg0U", "Tg0X", "Tg0d", "Tg0g", "Tg0j", "Tg1Y", "Tg1c", "Tg1g", "TG0P"
             ]),
-            battery: readTemperature(keys: ["TB0T", "TB1T", "TB2T", "TB3T"])
+            battery: readTemperature(sensor: "battery", keys: ["TB0T", "TB1T", "TB2T", "TB3T"])
         )
     }
 
@@ -310,7 +330,7 @@ public final class SMCDevice: @unchecked Sendable {
         try? connection.write("Ftst", bytes: [0])
     }
 
-    private func readFan(index: Int) -> SMCFanReading? {
+    private func readFan(index: Int, includeTargetRPM: Bool) -> SMCFanReading? {
         let actualKey = "F\(index)Ac"
         guard let actual = try? connection.read(actualKey),
               let currentRPM = decodeRPM(actual) else {
@@ -319,7 +339,9 @@ public final class SMCDevice: @unchecked Sendable {
 
         let minimumRPM = (try? connection.read("F\(index)Mn")).flatMap(decodeRPM) ?? 1_000
         let maximumRPM = (try? connection.read("F\(index)Mx")).flatMap(decodeRPM) ?? 6_000
-        let targetRPM = (try? connection.read("F\(index)Tg")).flatMap(decodeRPM).map { Int($0.rounded()) }
+        let targetRPM = includeTargetRPM
+            ? (try? connection.read("F\(index)Tg")).flatMap(decodeRPM).map { Int($0.rounded()) }
+            : nil
 
         return SMCFanReading(
             index: index,
@@ -369,11 +391,27 @@ public final class SMCDevice: @unchecked Sendable {
         }
     }
 
-    private func readTemperature(keys: [String]) -> Double? {
-        keys.lazy
-            .compactMap { try? self.connection.read($0) }
-            .compactMap(decodeTemperature)
-            .first(where: { $0.isFinite && (0...150).contains($0) })
+    private func readTemperature(sensor: String, keys: [String]) -> Double? {
+        if let key = temperatureKeys[sensor], let temperature = validTemperature(for: key) {
+            return temperature
+        }
+        temperatureKeys.removeValue(forKey: sensor)
+        for key in keys {
+            if let temperature = validTemperature(for: key) {
+                temperatureKeys[sensor] = key
+                return temperature
+            }
+        }
+        return nil
+    }
+
+    private func validTemperature(for key: String) -> Double? {
+        guard let value = try? connection.read(key),
+              let temperature = decodeTemperature(value),
+              temperature.isFinite, (0...150).contains(temperature) else {
+            return nil
+        }
+        return temperature
     }
 
     private func decodeRPM(_ value: SMCValue) -> Double? {

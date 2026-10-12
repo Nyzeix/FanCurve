@@ -18,7 +18,7 @@ actor AppleSMCHardwareService: HardwareService {
     }
 
     func snapshot() async throws -> SystemSnapshot {
-        let readings = try device.readFans()
+        let readings = try device.readFans(includeTargetRPM: false)
         let temperatures = device.readTemperatures()
 
         let fans = readings.map { reading in
@@ -49,6 +49,10 @@ actor AppleSMCHardwareService: HardwareService {
 
     func restoreAutomaticControl() async throws {
         // La lecture seule ne modifie aucun état matériel.
+    }
+
+    func invalidateCachedMetadata() async {
+        device.invalidateCachedMetadata()
     }
 
     private var thermalCondition: ThermalCondition {

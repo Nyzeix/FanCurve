@@ -5,6 +5,11 @@ protocol HardwareService: Sendable {
     func snapshot() async throws -> SystemSnapshot
     func setTargetRPM(_ rpm: Int, for fanID: FanIdentifier) async throws
     func restoreAutomaticControl() async throws
+    func invalidateCachedMetadata() async
+}
+
+extension HardwareService {
+    func invalidateCachedMetadata() async {}
 }
 
 /// Point d’entrée unique pour le backend matériel.

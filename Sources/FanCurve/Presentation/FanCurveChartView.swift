@@ -1,12 +1,18 @@
 import SwiftUI
 
-struct FanCurveChartView: View {
+struct FanCurveChartView: View, Equatable {
     let points: [FanCurvePoint]
     let maximumRPM: Int
     let temperatureUnit: TemperatureUnit
 
     private let temperatureTicks = [35.0, 50, 65, 80, 95, 105]
     private let verticalTickFractions = [0.0, 0.25, 0.5, 0.75, 1.0]
+
+    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.points == rhs.points
+            && lhs.maximumRPM == rhs.maximumRPM
+            && lhs.temperatureUnit == rhs.temperatureUnit
+    }
 
     var body: some View {
         VStack(spacing: 4) {

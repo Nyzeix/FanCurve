@@ -74,6 +74,20 @@ It then loads or restarts the helper with `launchd`.
 
 A `0 RPM` point is accepted from the application's minimum editable temperature of 35 °C (95 °F). Every non-zero target must be at least `2,350 RPM` and remain below the maximum reported for the fan; values between `1 RPM` and `2,349 RPM` are not accepted. When a curve goes from `0 RPM` to a non-zero target, FanCurve keeps the fan at `0 RPM` until the next point, then applies the non-zero target. macOS and the Mac firmware retain their own thermal protections and may override the requested behavior.
 
+## Background activity
+
+FanCurve adapts its work to the current use:
+
+- With Custom control enabled, temperatures are sampled once per second. Changed fan targets are sent immediately; identical targets are reasserted every ten seconds.
+- With the dashboard visible or the menu bar panel open, readings refresh once per second.
+- With both panels hidden and Custom control disabled, the temperature/RPM menu bar display uses the refresh interval selected in Settings.
+- With both panels hidden, the temperature icon selected, and Custom control disabled, sensor polling pauses. Opening a panel immediately requests new readings.
+- When the displays sleep, monitoring pauses if Custom control is disabled. Active custom control keeps sampling until the Mac itself sleeps.
+
+The menu bar updates only when its displayed text changes. Sensor values remain freshly read; only SMC key metadata and the selected sensor keys are cached. Reading failures back off for at least five seconds after returning custom control to macOS. On system sleep, FanCurve stops polling and returns fan control to macOS. After wake, it rediscovers metadata and leaves Custom control disabled.
+
+If returning control to macOS fails, FanCurve shows an error and retries every five seconds until the helper confirms the return to automatic mode, including in icon-only background mode.
+
 ## Build from source
 
 Requirements:

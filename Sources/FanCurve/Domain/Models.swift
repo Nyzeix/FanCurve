@@ -63,6 +63,16 @@ struct SystemSnapshot: Equatable, Sendable {
     var referenceTemperature: Double? {
         [cpuTemperature, gpuTemperature].compactMap { $0 }.max()
     }
+
+    func hasSameDisplayedReadings(as other: SystemSnapshot, unit: TemperatureUnit) -> Bool {
+        let formatter = TemperatureFormatter(unit: unit)
+        return formatter.string(fromCelsius: cpuTemperature) == formatter.string(fromCelsius: other.cpuTemperature)
+            && formatter.string(fromCelsius: gpuTemperature) == formatter.string(fromCelsius: other.gpuTemperature)
+            && formatter.string(fromCelsius: batteryTemperature) == formatter.string(fromCelsius: other.batteryTemperature)
+            && fans == other.fans
+            && thermalCondition == other.thermalCondition
+            && isSimulated == other.isSimulated
+    }
 }
 
 enum CurveTemperatureSource: String, CaseIterable, Codable, Sendable {

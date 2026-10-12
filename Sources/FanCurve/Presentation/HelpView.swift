@@ -38,6 +38,11 @@ struct HelpView: View {
                     text: "Open Settings from the macOS menu bar, or from the FanCurve menu, to choose the refresh rate, status bar display, and temperature unit."
                 )
                 helpSection(
+                    title: "Background activity",
+                    systemImage: "leaf",
+                    text: "Custom control samples temperatures once per second. When both panels are hidden, monitoring follows your menu bar refresh interval. With the temperature icon selected and Custom control off, sensor polling pauses until you open a panel. System sleep returns control to macOS; Custom control stays off after wake."
+                )
+                helpSection(
                     title: "Updates",
                     systemImage: "arrow.down.circle",
                     text: "FanCurve checks the official GitHub release periodically. A new version is never installed without your confirmation. Before updating, FanCurve returns fan control to macOS and keeps Custom control disabled after relaunch."

@@ -35,4 +35,8 @@ actor PrivilegedHardwareService: HardwareService {
     func restoreAutomaticControl() async throws {
         try await helper.restoreAutomaticControl()
     }
+
+    func invalidateCachedMetadata() async {
+        await reader.invalidateCachedMetadata()
+    }
 }

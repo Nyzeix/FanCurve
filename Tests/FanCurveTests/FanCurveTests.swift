@@ -210,6 +210,13 @@ final class FanCurveTests: XCTestCase {
 
         let device = try SMCDevice()
         XCTAssertTrue(device.canControlFans())
+        let readings = try device.readFans(includeTargetRPM: false)
+        XCTAssertTrue(readings.allSatisfy { $0.targetRPM == nil })
+        device.invalidateCachedMetadata()
+        let temperatures = device.readTemperatures()
+        XCTAssertNotNil(temperatures.cpu)
+        XCTAssertNotNil(temperatures.gpu)
+        XCTAssertFalse(try device.readFans().isEmpty)
     }
 
 }

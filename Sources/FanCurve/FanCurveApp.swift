@@ -29,7 +29,8 @@ struct FanCurveApp: App {
         MenuBarExtra {
             MenuBarView(viewModel: viewModel, updateCoordinator: updateCoordinator)
         } label: {
-            MenuBarLabel(viewModel: viewModel)
+            MenuBarLabel(status: viewModel.menuBarStatus)
+                .onAppear { viewModel.start() }
         }
         .menuBarExtraStyle(.window)
     }

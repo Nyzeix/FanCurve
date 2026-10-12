@@ -1,42 +1,23 @@
 import SwiftUI
 
 struct MenuBarLabel: View {
-    @ObservedObject var viewModel: FanControlViewModel
-    @State private var displayedSnapshot = SystemSnapshot.empty
+    @ObservedObject var status: MenuBarStatusModel
 
     var body: some View {
         Group {
-            switch viewModel.menuBarPreferences.displayMode {
+            switch status.presentation.displayMode {
             case .temperatureIcon:
                 Image(systemName: "thermometer.medium")
-                    .accessibilityLabel(labelText)
+                    .accessibilityLabel(status.presentation.text)
             case .temperatureAndRPM:
                 HStack(spacing: 5) {
                     Image(systemName: "wind")
-                    Text(labelText)
+                    Text(status.presentation.text)
                         .monospacedDigit()
                 }
             }
         }
         .help("FanCurve")
-        .task(id: viewModel.menuBarPreferences.updateInterval) {
-            while !Task.isCancelled {
-                displayedSnapshot = viewModel.snapshot
-
-                do {
-                    try await Task.sleep(for: viewModel.menuBarPreferences.updateInterval.duration)
-                } catch {
-                    return
-                }
-            }
-        }
-    }
-
-    private var labelText: String {
-        let formatter = TemperatureFormatter(unit: viewModel.menuBarPreferences.temperatureUnit)
-        let temperature = formatter.string(fromCelsius: displayedSnapshot.referenceTemperature)
-        let totalFanRPM = displayedSnapshot.fans.map(\.currentRPM).reduce(0, +)
-        return "\(temperature) · \(totalFanRPM) RPM"
     }
 }
 
@@ -101,6 +82,11 @@ struct MenuBarView: View {
         }
         .padding(14)
         .frame(width: menuBarPopoverWidth)
+        .background {
+            WindowVisibilityObserver { viewModel.setMenuBarVisible($0) }
+                .frame(width: 0, height: 0)
+        }
+        .onDisappear { viewModel.setMenuBarVisible(false) }
     }
 
     private func metricRow(_ title: String, value: String, icon: String) -> some View {
