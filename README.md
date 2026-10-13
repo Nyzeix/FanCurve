@@ -4,6 +4,8 @@ FanCurve is a native macOS menu bar application for monitoring temperatures and 
 
 It displays CPU, GPU, and battery temperatures, reports current fan speed, and lets you define how fan RPM should change with temperature. When custom control is disabled, fan management is returned to macOS.
 
+The current version is **0.1.6**, with optimizations to reduce background activity and energy use. See the [release notes](CHANGELOG.md) for the changes.
+
 > [!WARNING]
 > FanCurve uses undocumented AppleSMC interfaces because macOS does not provide a public API for direct fan control. Compatibility can change after a macOS update. Keep the application visible while testing a curve, and disable custom control immediately if readings or fan behavior appear abnormal.
 
@@ -133,8 +135,8 @@ The `Build macOS package` GitHub Actions workflow:
 To publish a release:
 
 ```bash
-git tag v0.1.5
-git push origin v0.1.5
+git tag -a v0.1.6 -m "Release v0.1.6"
+git push origin v0.1.6
 ```
 
 ## Project structure
